@@ -43,9 +43,13 @@ export default {
       else return "N/A";
     },
     coinPrice() {
-      if (this.coin.current_price != null)
-        return this.coin.current_price.toFixed(2);
-      else return "N/A";
+      if (this.coin.current_price != null) {
+        if (this.coin.current_price >= 1) {
+          return this.coin.current_price.toFixed(2);
+        } else {
+          return this.coin.current_price.toFixed(5);
+        }
+      } else return "N/A";
     },
     dayPriceChange() {
       if (this.coin.price_change_24h !== null) {
@@ -106,11 +110,11 @@ export default {
     },
   },
   methods: {
-    toggleFavorite() {
+    async toggleFavorite() {
       if (!this.isFavorite) {
-        this.$store.commit("addFavorite", this.coin);
+        await this.$store.commit("addFavorite", this.coin);
       } else if (this.isFavorite) {
-        this.$store.commit("removeFavorite", this.coin.name);
+        await this.$store.commit("removeFavorite", this.coin.name);
       }
       this.$emit("format-data");
     },

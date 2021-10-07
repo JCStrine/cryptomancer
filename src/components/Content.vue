@@ -4,14 +4,18 @@
     <table>
       <tr>
         <th>User Amount</th>
-        <th>Rank</th>
+        <th @click="sort('market_cap_rank')">Rank</th>
         <th id="img-column"></th>
-        <th>Name</th>
-        <th>Price</th>
-        <th>Price Change 24h</th>
-        <th>Price Change % 24h</th>
-        <th>Price Change % 7d</th>
-        <th>Price Change % 30d</th>
+        <th @click="sort('name')">Name</th>
+        <th @click="sort('current_price')">Price</th>
+        <th @click="sort('price_change_24h')">Price Change 24h</th>
+        <th @click="sort('price_change_percentage_24h')">Price Change % 24h</th>
+        <th @click="sort('price_change_percentage_7d_in_currency')">
+          Price Change % 7d
+        </th>
+        <th @click="sort('price_change_percentage_30d_in_currency')">
+          Price Change % 30d
+        </th>
         <th>Market Cap</th>
       </tr>
 
@@ -45,6 +49,11 @@ export default {
       lastUpdate: null,
       favorites: [],
       nonFavorites: [],
+      sortInfo: {
+        isSorted: false,
+        sortParam: "",
+        sortValue: true,
+      },
     };
   },
   computed: {
@@ -53,17 +62,71 @@ export default {
     },
   },
   methods: {
+    sort(id) {
+      this.sortInfo.isSorted = true;
+      this.sortInfo.sortParam = id;
+
+      if (id == "name") {
+        if (this.sortInfo.sortValue === true) {
+          this.nonFavorites = this.nonFavorites.sort((a, b) => {
+            return a[id].localeCompare(b[id]);
+          });
+          this.favorites = this.favorites.sort((a, b) => {
+            return a[id].localeCompare(b[id]);
+          });
+        }
+        if (this.sortInfo.sortValue === false) {
+          this.nonFavorites = this.nonFavorites.sort((a, b) => {
+            return a[id].localeCompare(b[id]);
+          });
+          this.nonFavorites = this.nonFavorites.reverse();
+          this.favorites = this.favorites.sort((a, b) => {
+            return a[id].localeCompare(b[id]);
+          });
+          this.favorites = this.favorites.reverse();
+        }
+      } else {
+        if (this.sortInfo.sortValue === true) {
+          for (let i = 0; i < this.nonFavorites.length; i++) {
+            this.nonFavorites = this.nonFavorites.sort((a, b) => {
+              return a[id] - b[id];
+            });
+          }
+          for (let i = 0; i < this.favorites.length; i++) {
+            this.favorites = this.favorites.sort((a, b) => {
+              return a[id] - b[id];
+            });
+          }
+        }
+        if (this.sortInfo.sortValue === false) {
+          for (let i = 0; i < this.nonFavorites.length; i++) {
+            this.nonFavorites = this.nonFavorites.sort((a, b) => {
+              return b[id] - a[id];
+            });
+          }
+          for (let i = 0; i < this.favorites.length; i++) {
+            this.favorites = this.favorites.sort((a, b) => {
+              return b[id] - a[id];
+            });
+          }
+        }
+      }
+
+      this.sortInfo.sortValue = !this.sortInfo.sortValue;
+    },
     formatData(data) {
       let arr = [...new Set(data)];
       let favorites = this.favoriteStore;
+
       for (let i = 0; i < arr.length; i++) {
         for (let a = 0; a < favorites.length; a++) {
           if (arr[i].name == favorites[a].name) {
             favorites[a] = arr[i];
-            arr.splice(i, 1);
           }
         }
       }
+
+      arr = arr.filter((ar) => !favorites.find((rm) => rm.name === ar.name));
       this.favorites = favorites;
       this.nonFavorites = arr;
     },
@@ -87,6 +150,7 @@ export default {
       this.coinData = await res.json();
       this.update();
       this.formatData(this.coinData);
+      if (this.sortInfo.isSorted === true) this.sort(this.sortInfo.sortParam);
     },
   },
   created() {
